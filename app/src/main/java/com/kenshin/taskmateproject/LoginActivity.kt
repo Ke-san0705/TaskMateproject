@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.auth.FirebaseAuth
+import android.content.Intent
+
 
 class LoginActivity : ComponentActivity() {
 
@@ -78,6 +80,8 @@ fun LoginScreen(auth: FirebaseAuth) {
                         if (task.isSuccessful) {
                             Toast.makeText(context, "ログイン成功", Toast.LENGTH_SHORT).show()
                             // ここでMainActivityなどに遷移させる予定（次で書く）
+                            val intent = Intent(context, MainActivity::class.java)
+                            context.startActivity(intent)
                         } else {
                             Toast.makeText(context, "ログイン失敗: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                         }
