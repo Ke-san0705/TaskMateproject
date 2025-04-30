@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.kenshin.taskmateproject.ui.theme.TaskMateprojectTheme
+import android.content.Intent
 
 class MainTitle : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,11 +33,14 @@ class MainTitle : ComponentActivity() {
 
 @Composable
 fun AppRoot() {
+    val context = LocalContext.current
     var currentScreen by remember { mutableStateOf("logo") }
 
     when (currentScreen) {
         "logo" -> LogoScreen(onStartClick = { currentScreen = "welcome" })
-        "welcome" -> WelcomeScreen()
+        "welcome" -> WelcomeScreen(onFinish = {
+            context.startActivity(Intent(context, KaliLogin::class.java))
+        })
     }
 }
 
@@ -68,21 +72,6 @@ fun LogoScreen(onStartClick: () -> Unit) {
                 Text("スタート")
             }
         }
-    }
-}
-
-@Composable
-fun WelcomeScreen() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFEEEEEE)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "ようこそTaskMateへ！",
-            style = MaterialTheme.typography.headlineMedium
-        )
     }
 }
 
