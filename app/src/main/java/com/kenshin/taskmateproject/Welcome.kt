@@ -1,5 +1,6 @@
 package com.kenshin.taskmateproject
 
+import androidx.compose.runtime.LaunchedEffect
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -17,6 +18,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kenshin.taskmateproject.ui.theme.TaskMateprojectTheme
+import kotlinx.coroutines.delay
+import androidx.compose.animation.core.animateFloatAsState  // アニメーションを使う際に必要
+import androidx.compose.runtime.LaunchedEffect           // 非同期の効果（アニメーション実行）に必要
+import kotlinx.coroutines.delay                         // 文字を一つずつ表示するために必要
+
 
 class Welcome : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,7 +31,8 @@ class Welcome : ComponentActivity() {
             TaskMateprojectTheme {
                 WelcomeScreen(onFinish = {
                     startActivity(Intent(this, KaliLogin::class.java))
-                    })
+                    finish()
+                })
             }
         }
     }
@@ -33,10 +40,9 @@ class Welcome : ComponentActivity() {
 
 @Composable
 fun WelcomeScreen(onFinish: () -> Unit) {
-    val context = LocalContext.current
-
     val messages = listOf(
-        "TaskMateは、あなたの毎日をちょっと楽しくするタスク管理アプリです。",
+        "TaskMateは",
+        "あなたの毎日をちょっと楽しくするタスク管理アプリです。",
         "応援してくれるのは、友人や気になるあの子。",
         "あるいは、偉人のようなAIアバターかもしれません。",
         "やるべきことに、少しの勇気とモチベーションを。",
@@ -45,18 +51,30 @@ fun WelcomeScreen(onFinish: () -> Unit) {
     )
 
     var index by remember { mutableStateOf(0) }
+    var showMessage by remember { mutableStateOf(true) }
+    var triggerNextMessage by remember { mutableStateOf(false) }
+
     val isLastMessage = index == messages.lastIndex
+
+    // メッセージ切り替えのための非同期処理
+    LaunchedEffect(triggerNextMessage) {
+        if (triggerNextMessage && !isLastMessage) {
+            delay(500)
+            index++
+            showMessage = true
+            triggerNextMessage = false
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .clickable {
                 if (!isLastMessage) {
-                    index++
+                    showMessage = false
+                    triggerNextMessage = true
                 } else {
-                    // 遷移先（KaliLogin）へ
-                    context.startActivity(Intent(context, KaliLogin::class.java))
-                    if (context is ComponentActivity) context.finish()
+                    onFinish()
                 }
             }
             .padding(32.dp),
@@ -66,15 +84,9 @@ fun WelcomeScreen(onFinish: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = messages[index],
-                fontSize = 22.sp,
-                lineHeight = 30.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .padding(horizontal = 16.dp)
-            )
+            if (showMessage) {
+                AnimatedText(messages[index])
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -85,4 +97,27 @@ fun WelcomeScreen(onFinish: () -> Unit) {
             )
         }
     }
+}
+
+@Composable
+fun AnimatedText(message: String) {
+    val transition = remember { mutableStateOf("") }
+    val animatedText = message.chunked(1) // 文字を一文字ずつに分ける
+
+    LaunchedEffect(Unit) {
+        for (char in animatedText) {
+            transition.value += char
+            delay(100) // 各文字の間隔（ミリ秒）
+        }
+    }
+
+    Text(
+        text = transition.value,
+        fontSize = 22.sp,
+        lineHeight = 30.sp,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth(0.95f)
+            .padding(horizontal = 8.dp)
+    )
 }
