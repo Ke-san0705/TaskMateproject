@@ -1,9 +1,7 @@
 package com.kenshin.taskmateproject
 
-import androidx.compose.runtime.LaunchedEffect
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
@@ -19,20 +17,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kenshin.taskmateproject.ui.theme.TaskMateprojectTheme
 import kotlinx.coroutines.delay
-import androidx.compose.animation.core.animateFloatAsState  // アニメーションを使う際に必要
-import androidx.compose.runtime.LaunchedEffect           // 非同期の効果（アニメーション実行）に必要
-import kotlinx.coroutines.delay                         // 文字を一つずつ表示するために必要
-
 
 class Welcome : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             TaskMateprojectTheme {
-                WelcomeScreen(onFinish = {
-                    startActivity(Intent(this, KaliLogin::class.java))
-                    finish()
-                })
+                WelcomeScreen(
+                    onFinish = {
+                        startActivity(Intent(this, KaliLogin::class.java))
+                        finish()
+                    }
+                )
             }
         }
     }
@@ -41,6 +37,7 @@ class Welcome : ComponentActivity() {
 @Composable
 fun WelcomeScreen(onFinish: () -> Unit) {
     val messages = listOf(
+        "TaskMateへようこそ",
         "TaskMateは",
         "あなたの毎日をちょっと楽しくするタスク管理アプリです。",
         "応援してくれるのは、友人や気になるあの子。",
@@ -55,8 +52,9 @@ fun WelcomeScreen(onFinish: () -> Unit) {
     var triggerNextMessage by remember { mutableStateOf(false) }
 
     val isLastMessage = index == messages.lastIndex
+    val context = LocalContext.current
 
-    // メッセージ切り替えのための非同期処理
+    // メッセージを1つ進める処理
     LaunchedEffect(triggerNextMessage) {
         if (triggerNextMessage && !isLastMessage) {
             delay(500)
@@ -77,10 +75,28 @@ fun WelcomeScreen(onFinish: () -> Unit) {
                     onFinish()
                 }
             }
-            .padding(32.dp),
-        contentAlignment = Alignment.Center
+            .padding(32.dp)
     ) {
+        // スキップボタン（右上）
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp, end = 16.dp),
+            contentAlignment = Alignment.TopEnd
+        ) {
+            Text(
+                text = "スキップ",
+                color = Color.Blue,
+                modifier = Modifier.clickable {
+                    index = messages.lastIndex
+                    showMessage = true
+                }
+            )
+        }
+
+        // メッセージ表示エリア
         Column(
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -102,12 +118,13 @@ fun WelcomeScreen(onFinish: () -> Unit) {
 @Composable
 fun AnimatedText(message: String) {
     val transition = remember { mutableStateOf("") }
-    val animatedText = message.chunked(1) // 文字を一文字ずつに分ける
+    val animatedText = message.chunked(1)
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(message) {
+        transition.value = ""
         for (char in animatedText) {
             transition.value += char
-            delay(100) // 各文字の間隔（ミリ秒）
+            delay(100)
         }
     }
 
